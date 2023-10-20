@@ -15,4 +15,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "Greenday"
 include(":app")
- 
+include(":feature:home")
