@@ -54,6 +54,7 @@ dependencies {
 
     // modules
     implementation(project(":core:designsystem"))
+    implementation(project(":feature:home"))
 
     implementation(libs.core.ktx)
     implementation(libs.lifecycle.runtime.ktx)
