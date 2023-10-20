@@ -31,6 +31,12 @@ android {
     kotlinOptions {
         jvmTarget = "1.8"
     }
+    buildFeatures {
+        compose = true
+    }
+    composeOptions {
+        kotlinCompilerExtensionVersion = "1.4.3"
+    }
 }
 
 dependencies {
@@ -41,4 +47,9 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.test.ext.junit)
     androidTestImplementation(libs.espresso.core)
+
+    implementation(libs.ui)
+    implementation(libs.ui.graphics)
+    implementation(libs.material3)
+    implementation(platform(libs.compose.bom))
 }
