@@ -52,4 +52,5 @@ dependencies {
     implementation(libs.ui.graphics)
     implementation(libs.material3)
     implementation(platform(libs.compose.bom))
+    implementation(libs.material.icons.extended)
 }
