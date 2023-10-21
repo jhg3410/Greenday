@@ -13,15 +13,23 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import watcha.test.greenday.core.model.Song
+import watcha.test.greenday.core.ui.state.UiState
 
 @Composable
 fun HomeScreen(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    homeViewModel: HomeViewModel = hiltViewModel()
 ) {
+
+    val uiState by homeViewModel.uiState.collectAsStateWithLifecycle()
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -29,7 +37,8 @@ fun HomeScreen(
             .padding(horizontal = 24.dp)
     ) {
         HomeScreenTitle()
-        HomeScreenContent()
+        HomeScreenContent(songs = homeViewModel.songs)
+        HomeScreenState(uiState = uiState)
     }
 }
 
@@ -47,7 +56,8 @@ private fun HomeScreenTitle(
 
 @Composable
 private fun HomeScreenContent(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    songs: List<Song>
 ) {
     LazyVerticalGrid(
         modifier = modifier.fillMaxSize(),
@@ -56,7 +66,7 @@ private fun HomeScreenContent(
         horizontalArrangement = Arrangement.spacedBy(24.dp),
         contentPadding = PaddingValues(bottom = 24.dp)
     ) {
-        items(items = MockData.songList) { song ->
+        items(items = songs, key = { it.trackId }) { song ->
             HomeCard(
                 modifier = Modifier.sizeIn(minWidth = 300.dp),
                 song = song
@@ -65,50 +75,21 @@ private fun HomeScreenContent(
     }
 }
 
+@Composable
+fun HomeScreenState(
+    uiState: UiState<Unit>
+) {
+    when (uiState) {
+        is UiState.Loading -> {
+            Text(text = "Loading")
+        }
 
-private object MockData {
-    val songList = listOf(
-        Song(
-            trackName = "Track 1",
-            collectionName = "Collection 1",
-            artistName = "Artist 1",
-            artworkUrl = "https://is1-ssl.mzstatic.com/image/thumb/Music122/v4/59/2c/5e/592c5e18-57b8-f011-1fbf-586dbb086640/859758680084_cover.png/100x100bb.jpg"
-        ),
-        Song(
-            trackName = "Track 2",
-            collectionName = "Collection 2",
-            artistName = "Artist 2",
-            artworkUrl = "https://is1-ssl.mzstatic.com/image/thumb/Music122/v4/59/2c/5e/592c5e18-57b8-f011-1fbf-586dbb086640/859758680084_cover.png/100x100bb.jpg"
-        ),
-        Song(
-            trackName = "Track 3",
-            collectionName = "Collection 3",
-            artistName = "Artist 3",
-            artworkUrl = "https://is1-ssl.mzstatic.com/image/thumb/Music122/v4/59/2c/5e/592c5e18-57b8-f011-1fbf-586dbb086640/859758680084_cover.png/100x100bb.jpg"
-        ),
-        Song(
-            trackName = "Track 4",
-            collectionName = "Collection 4",
-            artistName = "Artist 4",
-            artworkUrl = "https://is1-ssl.mzstatic.com/image/thumb/Music124/v4/dd/64/78/dd6478bc-e684-1b69-2e4e-c7e1d6a36c0a/045635953260.jpg/100x100bb.jpg"
-        ),
-        Song(
-            trackName = "Track 5",
-            collectionName = "Collection 5",
-            artistName = "Artist 5",
-            artworkUrl = "https://is1-ssl.mzstatic.com/image/thumb/Music124/v4/dd/64/78/dd6478bc-e684-1b69-2e4e-c7e1d6a36c0a/045635953260.jpg/100x100bb.jpg"
-        ),
-        Song(
-            trackName = "Track 6",
-            collectionName = "Collection 6",
-            artistName = "Artist 6",
-            artworkUrl = "https://is1-ssl.mzstatic.com/image/thumb/Music124/v4/dd/64/78/dd6478bc-e684-1b69-2e4e-c7e1d6a36c0a/045635953260.jpg/100x100bb.jpg"
-        ),
-        Song(
-            trackName = "Track 7",
-            collectionName = "Collection 7",
-            artistName = "Artist 7",
-            artworkUrl = "https://is1-ssl.mzstatic.com/image/thumb/Music124/v4/dd/64/78/dd6478bc-e684-1b69-2e4e-c7e1d6a36c0a/045635953260.jpg/100x100bb.jpg"
-        ),
-    )
+        is UiState.Success -> {
+            Unit
+        }
+
+        is UiState.Error -> {
+            Text(text = "Error")
+        }
+    }
 }
