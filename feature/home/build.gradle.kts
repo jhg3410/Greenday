@@ -2,6 +2,8 @@
 plugins {
     alias(libs.plugins.com.android.library)
     alias(libs.plugins.org.jetbrains.kotlin.android)
+    alias(libs.plugins.org.jetbrains.kotlin.kapt)
+    alias(libs.plugins.hilt.android)
 }
 
 android {
@@ -25,11 +27,11 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = JavaVersion.VERSION_17.toString()
     }
     buildFeatures {
         compose = true
@@ -43,6 +45,8 @@ dependencies {
     // modules
     implementation(project(":core:designsystem"))
     implementation(project(":core:model"))
+    implementation(project(":core:data"))
+    implementation(project(":core:ui"))
 
     implementation(libs.core.ktx)
     implementation(libs.appcompat)
@@ -54,7 +58,15 @@ dependencies {
     implementation(libs.ui)
     implementation(libs.ui.graphics)
     implementation(libs.material3)
+    implementation(libs.material.compose)
     implementation(platform(libs.compose.bom))
 
     implementation(libs.coil)
+
+    // hilt
+    implementation(libs.hilt.android)
+    kapt(libs.hilt.compiler)
+    implementation(libs.hilt.navigation)
+
+    implementation(libs.lifecycle.runtime.compose)
 }

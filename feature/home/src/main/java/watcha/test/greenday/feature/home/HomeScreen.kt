@@ -2,26 +2,69 @@ package watcha.test.greenday.feature.home
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.pullrefresh.PullRefreshIndicator
+import androidx.compose.material.pullrefresh.pullRefresh
+import androidx.compose.material.pullrefresh.rememberPullRefreshState
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.launch
 import watcha.test.greenday.core.model.Song
+import watcha.test.greenday.core.ui.state.UiState
 
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun HomeScreen(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    homeViewModel: HomeViewModel = hiltViewModel()
 ) {
+
+    val uiState by homeViewModel.uiState.collectAsStateWithLifecycle()
+
+    val coroutineScope = rememberCoroutineScope()
+    var isRefreshing by remember { mutableStateOf(false) }
+
+    val pullRefreshState = rememberPullRefreshState(
+        refreshing = isRefreshing,
+        onRefresh = {
+            coroutineScope.launch {
+                isRefreshing = true
+                homeViewModel.refresh()
+            }
+        }
+    )
+
+    LaunchedEffect(uiState) {
+        if (uiState !is UiState.Loading) {
+            isRefreshing = false
+        }
+    }
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -29,7 +72,20 @@ fun HomeScreen(
             .padding(horizontal = 24.dp)
     ) {
         HomeScreenTitle()
-        HomeScreenContent()
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .pullRefresh(pullRefreshState),
+            contentAlignment = Alignment.TopCenter
+        ) {
+            HomeScreenContent(songs = homeViewModel.songs)
+            PullRefreshIndicator(
+                refreshing = isRefreshing,
+                state = pullRefreshState,
+                contentColor = MaterialTheme.colorScheme.primary
+            )
+        }
+        HomeScreenState(modifier = Modifier, uiState = uiState, retry = homeViewModel::getSongs)
     }
 }
 
@@ -47,16 +103,17 @@ private fun HomeScreenTitle(
 
 @Composable
 private fun HomeScreenContent(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    songs: List<Song>
 ) {
     LazyVerticalGrid(
-        modifier = modifier.fillMaxSize(),
+        modifier = modifier,
         columns = GridCells.Adaptive(minSize = 300.dp),
         verticalArrangement = Arrangement.spacedBy(24.dp),
         horizontalArrangement = Arrangement.spacedBy(24.dp),
         contentPadding = PaddingValues(bottom = 24.dp)
     ) {
-        items(items = MockData.songList) { song ->
+        items(items = songs, key = { it.trackId }) { song ->
             HomeCard(
                 modifier = Modifier.sizeIn(minWidth = 300.dp),
                 song = song
@@ -65,50 +122,46 @@ private fun HomeScreenContent(
     }
 }
 
+@Composable
+private fun HomeScreenState(
+    modifier: Modifier = Modifier,
+    uiState: UiState<Unit>,
+    retry: suspend () -> Unit
+) {
+    val coroutineScope = rememberCoroutineScope()
 
-private object MockData {
-    val songList = listOf(
-        Song(
-            trackName = "Track 1",
-            collectionName = "Collection 1",
-            artistName = "Artist 1",
-            artworkUrl = "https://is1-ssl.mzstatic.com/image/thumb/Music122/v4/59/2c/5e/592c5e18-57b8-f011-1fbf-586dbb086640/859758680084_cover.png/100x100bb.jpg"
-        ),
-        Song(
-            trackName = "Track 2",
-            collectionName = "Collection 2",
-            artistName = "Artist 2",
-            artworkUrl = "https://is1-ssl.mzstatic.com/image/thumb/Music122/v4/59/2c/5e/592c5e18-57b8-f011-1fbf-586dbb086640/859758680084_cover.png/100x100bb.jpg"
-        ),
-        Song(
-            trackName = "Track 3",
-            collectionName = "Collection 3",
-            artistName = "Artist 3",
-            artworkUrl = "https://is1-ssl.mzstatic.com/image/thumb/Music122/v4/59/2c/5e/592c5e18-57b8-f011-1fbf-586dbb086640/859758680084_cover.png/100x100bb.jpg"
-        ),
-        Song(
-            trackName = "Track 4",
-            collectionName = "Collection 4",
-            artistName = "Artist 4",
-            artworkUrl = "https://is1-ssl.mzstatic.com/image/thumb/Music124/v4/dd/64/78/dd6478bc-e684-1b69-2e4e-c7e1d6a36c0a/045635953260.jpg/100x100bb.jpg"
-        ),
-        Song(
-            trackName = "Track 5",
-            collectionName = "Collection 5",
-            artistName = "Artist 5",
-            artworkUrl = "https://is1-ssl.mzstatic.com/image/thumb/Music124/v4/dd/64/78/dd6478bc-e684-1b69-2e4e-c7e1d6a36c0a/045635953260.jpg/100x100bb.jpg"
-        ),
-        Song(
-            trackName = "Track 6",
-            collectionName = "Collection 6",
-            artistName = "Artist 6",
-            artworkUrl = "https://is1-ssl.mzstatic.com/image/thumb/Music124/v4/dd/64/78/dd6478bc-e684-1b69-2e4e-c7e1d6a36c0a/045635953260.jpg/100x100bb.jpg"
-        ),
-        Song(
-            trackName = "Track 7",
-            collectionName = "Collection 7",
-            artistName = "Artist 7",
-            artworkUrl = "https://is1-ssl.mzstatic.com/image/thumb/Music124/v4/dd/64/78/dd6478bc-e684-1b69-2e4e-c7e1d6a36c0a/045635953260.jpg/100x100bb.jpg"
-        ),
-    )
+    Box(
+        modifier = modifier.fillMaxWidth(),
+        contentAlignment = Alignment.Center
+    ) {
+        when (uiState) {
+            is UiState.Loading -> {
+                CircularProgressIndicator()
+            }
+
+            is UiState.Success -> {
+                Unit
+            }
+
+            is UiState.Error -> {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = uiState.throwable.message ?: "Unknown Error",
+                        color = MaterialTheme.colorScheme.onBackground,
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                    Button(onClick = {
+                        coroutineScope.launch {
+                            retry()
+                        }
+                    }) {
+                        Text(text = "Retry", color = MaterialTheme.colorScheme.onPrimary)
+                    }
+                }
+            }
+        }
+    }
 }
