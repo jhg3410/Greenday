@@ -9,6 +9,7 @@ import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 import watcha.test.greenday.core.network.adapter.ResultCallAdapterFactory
 import watcha.test.greenday.core.network.api.ItunesApi
+import watcha.test.greenday.core.network.interceptor.loggingInterceptor
 import javax.inject.Singleton
 
 @Module
@@ -20,7 +21,9 @@ internal object NetworkModule {
     @Provides
     @Singleton
     fun provideOkHttpClient(): OkHttpClient {
-        return OkHttpClient.Builder().build()
+        return OkHttpClient.Builder()
+            .addInterceptor(loggingInterceptor)
+            .build()
     }
 
     @Provides

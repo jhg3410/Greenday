@@ -17,6 +17,10 @@ android {
         consumerProguardFiles("consumer-rules.pro")
     }
 
+    buildFeatures {
+        buildConfig = true
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
@@ -52,6 +56,7 @@ dependencies {
 
     implementation(libs.retrofit)
     implementation(libs.retrofit.moshi)
+    implementation(libs.logging.interceptor)
 
     implementation(libs.moshi)
     kapt(libs.moshi.codegen)
