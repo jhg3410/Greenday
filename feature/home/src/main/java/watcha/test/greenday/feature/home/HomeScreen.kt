@@ -2,23 +2,30 @@ package watcha.test.greenday.feature.home
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.launch
 import watcha.test.greenday.core.model.Song
 import watcha.test.greenday.core.ui.state.UiState
 
@@ -38,7 +45,7 @@ fun HomeScreen(
     ) {
         HomeScreenTitle()
         HomeScreenContent(songs = homeViewModel.songs)
-        HomeScreenState(uiState = uiState)
+        HomeScreenState(uiState = uiState, retry = homeViewModel::getSongs)
     }
 }
 
@@ -60,7 +67,7 @@ private fun HomeScreenContent(
     songs: List<Song>
 ) {
     LazyVerticalGrid(
-        modifier = modifier.fillMaxSize(),
+        modifier = modifier,
         columns = GridCells.Adaptive(minSize = 300.dp),
         verticalArrangement = Arrangement.spacedBy(24.dp),
         horizontalArrangement = Arrangement.spacedBy(24.dp),
@@ -77,19 +84,44 @@ private fun HomeScreenContent(
 
 @Composable
 private fun HomeScreenState(
-    uiState: UiState<Unit>
+    modifier: Modifier = Modifier,
+    uiState: UiState<Unit>,
+    retry: suspend () -> Unit
 ) {
-    when (uiState) {
-        is UiState.Loading -> {
-            Text(text = "Loading")
-        }
+    val coroutineScope = rememberCoroutineScope()
 
-        is UiState.Success -> {
-            Unit
-        }
+    Box(
+        modifier = modifier.fillMaxWidth(),
+        contentAlignment = Alignment.Center
+    ) {
+        when (uiState) {
+            is UiState.Loading -> {
+                CircularProgressIndicator()
+            }
 
-        is UiState.Error -> {
-            Text(text = "Error")
+            is UiState.Success -> {
+                Unit
+            }
+
+            is UiState.Error -> {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = uiState.throwable.message ?: "Unknown Error",
+                        color = MaterialTheme.colorScheme.onBackground,
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                    Button(onClick = {
+                        coroutineScope.launch {
+                            retry()
+                        }
+                    }) {
+                        Text(text = "Retry", color = MaterialTheme.colorScheme.onPrimary)
+                    }
+                }
+            }
         }
     }
 }
