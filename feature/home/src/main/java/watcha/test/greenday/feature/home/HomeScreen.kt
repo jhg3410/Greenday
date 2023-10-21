@@ -12,13 +12,21 @@ import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.pullrefresh.PullRefreshIndicator
+import androidx.compose.material.pullrefresh.pullRefresh
+import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -29,6 +37,7 @@ import kotlinx.coroutines.launch
 import watcha.test.greenday.core.model.Song
 import watcha.test.greenday.core.ui.state.UiState
 
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun HomeScreen(
     modifier: Modifier = Modifier,
@@ -37,6 +46,25 @@ fun HomeScreen(
 
     val uiState by homeViewModel.uiState.collectAsStateWithLifecycle()
 
+    val coroutineScope = rememberCoroutineScope()
+    var isRefreshing by remember { mutableStateOf(false) }
+
+    val pullRefreshState = rememberPullRefreshState(
+        refreshing = isRefreshing,
+        onRefresh = {
+            coroutineScope.launch {
+                isRefreshing = true
+                homeViewModel.refresh()
+            }
+        }
+    )
+
+    LaunchedEffect(uiState) {
+        if (uiState !is UiState.Loading) {
+            isRefreshing = false
+        }
+    }
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -44,8 +72,20 @@ fun HomeScreen(
             .padding(horizontal = 24.dp)
     ) {
         HomeScreenTitle()
-        HomeScreenContent(songs = homeViewModel.songs)
-        HomeScreenState(uiState = uiState, retry = homeViewModel::getSongs)
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .pullRefresh(pullRefreshState),
+            contentAlignment = Alignment.TopCenter
+        ) {
+            HomeScreenContent(songs = homeViewModel.songs)
+            PullRefreshIndicator(
+                refreshing = isRefreshing,
+                state = pullRefreshState,
+                contentColor = MaterialTheme.colorScheme.primary
+            )
+        }
+        HomeScreenState(modifier = Modifier, uiState = uiState, retry = homeViewModel::getSongs)
     }
 }
 

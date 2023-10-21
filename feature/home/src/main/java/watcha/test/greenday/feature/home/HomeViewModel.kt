@@ -30,6 +30,11 @@ class HomeViewModel @Inject constructor(
         }
     }
 
+    suspend fun refresh() {
+        _songs.clear()
+        getSongs()
+    }
+
     suspend fun getSongs() {
         createUiStateFlow {
             songRepository.getSongs()
