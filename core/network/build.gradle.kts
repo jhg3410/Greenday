@@ -34,6 +34,8 @@ android {
 }
 
 dependencies {
+    // modules
+    implementation(project(":core:model"))
 
     implementation(libs.core.ktx)
     implementation(libs.appcompat)
@@ -41,4 +43,10 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.test.ext.junit)
     androidTestImplementation(libs.espresso.core)
+
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.moshi)
+
+    implementation(libs.moshi)
+    implementation(libs.moshi.codegen)
 }
