@@ -9,7 +9,7 @@ import watcha.test.greenday.core.data.repository.SongRepositoryMock
 
 @Module
 @InstallIn(SingletonComponent::class)
-interface DataModule {
+internal interface DataModule {
 
     @Binds
     fun bindSongRepository(

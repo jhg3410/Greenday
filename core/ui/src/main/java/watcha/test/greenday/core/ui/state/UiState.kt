@@ -9,7 +9,7 @@ sealed interface UiState<out T> {
     data class Error(val throwable: Throwable) : UiState<Nothing>
 }
 
-fun <T> Result<T>.toUiState(): UiState<T> {
+private fun <T> Result<T>.toUiState(): UiState<T> {
     return fold(
         onSuccess = {
             UiState.Success(it)

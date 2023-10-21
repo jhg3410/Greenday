@@ -76,7 +76,7 @@ private fun HomeScreenContent(
 }
 
 @Composable
-fun HomeScreenState(
+private fun HomeScreenState(
     uiState: UiState<Unit>
 ) {
     when (uiState) {

@@ -3,7 +3,7 @@ package watcha.test.greenday.core.data.repository
 import watcha.test.greenday.core.model.Song
 import javax.inject.Inject
 
-class SongRepositoryMock @Inject constructor() : SongRepository {
+internal class SongRepositoryMock @Inject constructor() : SongRepository {
     override suspend fun getSongs(
         term: String,
         entity: String,
