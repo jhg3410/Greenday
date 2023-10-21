@@ -46,13 +46,13 @@ dependencies {
     androidTestImplementation(libs.androidx.test.ext.junit)
     androidTestImplementation(libs.espresso.core)
 
+    // hilt
+    implementation(libs.hilt.android)
+    kapt(libs.hilt.compiler)
+
     implementation(libs.retrofit)
     implementation(libs.retrofit.moshi)
 
     implementation(libs.moshi)
-    implementation(libs.moshi.codegen)
-
-    // hilt
-    implementation(libs.hilt.android)
-    kapt(libs.hilt.compiler)
+    kapt(libs.moshi.codegen)
 }

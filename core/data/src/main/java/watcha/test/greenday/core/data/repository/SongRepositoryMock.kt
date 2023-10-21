@@ -4,12 +4,7 @@ import watcha.test.greenday.core.model.Song
 import javax.inject.Inject
 
 internal class SongRepositoryMock @Inject constructor() : SongRepository {
-    override suspend fun getSongs(
-        term: String,
-        entity: String,
-        limit: Int,
-        offset: Int
-    ): Result<List<Song>> {
+    override suspend fun getSongs(limit: Int, offset: Int): Result<List<Song>> {
         return Result.success(
             listOf(
                 Song(

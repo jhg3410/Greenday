@@ -5,7 +5,7 @@ import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import watcha.test.greenday.core.data.repository.SongRepository
-import watcha.test.greenday.core.data.repository.SongRepositoryMock
+import watcha.test.greenday.core.data.repository.SongRepositoryImpl
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -13,6 +13,6 @@ internal interface DataModule {
 
     @Binds
     fun bindSongRepository(
-        repository: SongRepositoryMock
+        repository: SongRepositoryImpl
     ): SongRepository
 }
