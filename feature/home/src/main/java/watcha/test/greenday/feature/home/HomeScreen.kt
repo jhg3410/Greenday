@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.ExperimentalMaterialApi
@@ -78,14 +79,17 @@ fun HomeScreen(
                 .pullRefresh(pullRefreshState),
             contentAlignment = Alignment.TopCenter
         ) {
-            HomeScreenContent(songs = homeViewModel.songs)
+            HomeScreenContent(
+                songs = homeViewModel.songs,
+                uiState = uiState,
+                retry = homeViewModel::getSongs
+            )
             PullRefreshIndicator(
                 refreshing = isRefreshing,
                 state = pullRefreshState,
                 contentColor = MaterialTheme.colorScheme.primary
             )
         }
-        HomeScreenState(modifier = Modifier, uiState = uiState, retry = homeViewModel::getSongs)
     }
 }
 
@@ -104,8 +108,12 @@ private fun HomeScreenTitle(
 @Composable
 private fun HomeScreenContent(
     modifier: Modifier = Modifier,
-    songs: List<Song>
+    songs: List<Song>,
+    uiState: UiState<Unit>,
+    retry: suspend () -> Unit
 ) {
+    val coroutineScope = rememberCoroutineScope()
+
     LazyVerticalGrid(
         modifier = modifier,
         columns = GridCells.Adaptive(minSize = 300.dp),
@@ -119,49 +127,68 @@ private fun HomeScreenContent(
                 song = song
             )
         }
+
+        val stateItem: (content: @Composable () -> Unit) -> Unit = { content ->
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                content()
+            }
+        }
+
+        when (uiState) {
+            is UiState.Success -> Unit
+
+            is UiState.Loading -> {
+                stateItem {
+                    HomeScreenLoading()
+                }
+            }
+
+            is UiState.Error -> {
+                stateItem {
+                    HomeScreenError(
+                        errorMessage = uiState.throwable.message ?: "Unknown Error",
+                        retry = {
+                            coroutineScope.launch {
+                                retry()
+                            }
+                        }
+                    )
+                }
+            }
+        }
     }
 }
 
 @Composable
-private fun HomeScreenState(
-    modifier: Modifier = Modifier,
-    uiState: UiState<Unit>,
-    retry: suspend () -> Unit
+private fun HomeScreenLoading(
+    modifier: Modifier = Modifier
 ) {
-    val coroutineScope = rememberCoroutineScope()
-
     Box(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier.padding(vertical = 24.dp),
         contentAlignment = Alignment.Center
     ) {
-        when (uiState) {
-            is UiState.Loading -> {
-                CircularProgressIndicator()
-            }
+        CircularProgressIndicator()
+    }
+}
 
-            is UiState.Success -> {
-                Unit
-            }
-
-            is UiState.Error -> {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Text(
-                        text = uiState.throwable.message ?: "Unknown Error",
-                        color = MaterialTheme.colorScheme.onBackground,
-                        style = MaterialTheme.typography.bodyLarge
-                    )
-                    Button(onClick = {
-                        coroutineScope.launch {
-                            retry()
-                        }
-                    }) {
-                        Text(text = "Retry", color = MaterialTheme.colorScheme.onPrimary)
-                    }
-                }
-            }
+@Composable
+private fun HomeScreenError(
+    modifier: Modifier = Modifier,
+    errorMessage: String,
+    retry: () -> Unit
+) {
+    Column(
+        modifier = modifier.padding(vertical = 24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Text(
+            text = errorMessage,
+            color = MaterialTheme.colorScheme.onBackground,
+            style = MaterialTheme.typography.bodyLarge
+        )
+        Button(onClick = { retry() }) {
+            Text(text = "Retry", color = MaterialTheme.colorScheme.onPrimary)
         }
     }
 }
