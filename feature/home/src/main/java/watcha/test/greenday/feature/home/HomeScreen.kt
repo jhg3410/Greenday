@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
@@ -36,6 +37,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.launch
 import watcha.test.greenday.core.model.Song
+import watcha.test.greenday.core.ui.pagination.Pageable
 import watcha.test.greenday.core.ui.state.UiState
 
 @OptIn(ExperimentalMaterialApi::class)
@@ -82,7 +84,7 @@ fun HomeScreen(
             HomeScreenContent(
                 songs = homeViewModel.songs,
                 uiState = uiState,
-                retry = homeViewModel::getSongs
+                getSongs = homeViewModel::getSongs
             )
             PullRefreshIndicator(
                 refreshing = isRefreshing,
@@ -110,12 +112,17 @@ private fun HomeScreenContent(
     modifier: Modifier = Modifier,
     songs: List<Song>,
     uiState: UiState<Unit>,
-    retry: suspend () -> Unit
+    getSongs: suspend () -> Unit
 ) {
+
     val coroutineScope = rememberCoroutineScope()
+    val lazyGridState = rememberLazyGridState().apply {
+        Pageable(onLoadMore = getSongs, itemCountProvider = songs::size)
+    }
 
     LazyVerticalGrid(
         modifier = modifier,
+        state = lazyGridState,
         columns = GridCells.Adaptive(minSize = 300.dp),
         verticalArrangement = Arrangement.spacedBy(24.dp),
         horizontalArrangement = Arrangement.spacedBy(24.dp),
@@ -149,7 +156,7 @@ private fun HomeScreenContent(
                         errorMessage = uiState.throwable.message ?: "Unknown Error",
                         retry = {
                             coroutineScope.launch {
-                                retry()
+                                getSongs()
                             }
                         }
                     )
