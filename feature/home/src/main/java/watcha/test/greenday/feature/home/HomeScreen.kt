@@ -7,11 +7,14 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
@@ -35,6 +38,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.launch
 import watcha.test.greenday.core.model.Song
+import watcha.test.greenday.core.ui.pagination.Pageable
 import watcha.test.greenday.core.ui.state.UiState
 
 @OptIn(ExperimentalMaterialApi::class)
@@ -78,14 +82,17 @@ fun HomeScreen(
                 .pullRefresh(pullRefreshState),
             contentAlignment = Alignment.TopCenter
         ) {
-            HomeScreenContent(songs = homeViewModel.songs)
+            HomeScreenContent(
+                songs = homeViewModel.songs,
+                uiState = uiState,
+                getSongs = homeViewModel::getSongs
+            )
             PullRefreshIndicator(
                 refreshing = isRefreshing,
                 state = pullRefreshState,
                 contentColor = MaterialTheme.colorScheme.primary
             )
         }
-        HomeScreenState(modifier = Modifier, uiState = uiState, retry = homeViewModel::getSongs)
     }
 }
 
@@ -104,10 +111,19 @@ private fun HomeScreenTitle(
 @Composable
 private fun HomeScreenContent(
     modifier: Modifier = Modifier,
-    songs: List<Song>
+    songs: List<Song>,
+    uiState: UiState<Unit>,
+    getSongs: suspend () -> Unit
 ) {
+
+    val coroutineScope = rememberCoroutineScope()
+    val lazyGridState = rememberLazyGridState().apply {
+        Pageable(onLoadMore = getSongs, itemCountProvider = songs::size)
+    }
+
     LazyVerticalGrid(
         modifier = modifier,
+        state = lazyGridState,
         columns = GridCells.Adaptive(minSize = 300.dp),
         verticalArrangement = Arrangement.spacedBy(24.dp),
         horizontalArrangement = Arrangement.spacedBy(24.dp),
@@ -119,49 +135,72 @@ private fun HomeScreenContent(
                 song = song
             )
         }
+
+        val stateItem: (content: @Composable () -> Unit) -> Unit = { content ->
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                content()
+            }
+        }
+
+        when (uiState) {
+            is UiState.Success -> Unit
+
+            is UiState.Loading -> {
+                stateItem {
+                    HomeScreenLoading()
+                }
+            }
+
+            is UiState.Error -> {
+                stateItem {
+                    HomeScreenError(
+                        errorMessage = uiState.throwable.message ?: "Unknown Error",
+                        retry = {
+                            coroutineScope.launch {
+                                getSongs()
+                            }
+                        }
+                    )
+                }
+            }
+        }
     }
 }
 
 @Composable
-private fun HomeScreenState(
-    modifier: Modifier = Modifier,
-    uiState: UiState<Unit>,
-    retry: suspend () -> Unit
+private fun HomeScreenLoading(
+    modifier: Modifier = Modifier
 ) {
-    val coroutineScope = rememberCoroutineScope()
-
     Box(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .height(120.dp)
+            .padding(vertical = 24.dp),
         contentAlignment = Alignment.Center
     ) {
-        when (uiState) {
-            is UiState.Loading -> {
-                CircularProgressIndicator()
-            }
+        CircularProgressIndicator()
+    }
+}
 
-            is UiState.Success -> {
-                Unit
-            }
-
-            is UiState.Error -> {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Text(
-                        text = uiState.throwable.message ?: "Unknown Error",
-                        color = MaterialTheme.colorScheme.onBackground,
-                        style = MaterialTheme.typography.bodyLarge
-                    )
-                    Button(onClick = {
-                        coroutineScope.launch {
-                            retry()
-                        }
-                    }) {
-                        Text(text = "Retry", color = MaterialTheme.colorScheme.onPrimary)
-                    }
-                }
-            }
+@Composable
+private fun HomeScreenError(
+    modifier: Modifier = Modifier,
+    errorMessage: String,
+    retry: () -> Unit
+) {
+    Column(
+        modifier = modifier
+            .height(120.dp)
+            .padding(vertical = 24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Text(
+            text = errorMessage,
+            color = MaterialTheme.colorScheme.onBackground,
+            style = MaterialTheme.typography.bodyLarge
+        )
+        Button(onClick = { retry() }) {
+            Text(text = "Retry", color = MaterialTheme.colorScheme.onPrimary)
         }
     }
 }
