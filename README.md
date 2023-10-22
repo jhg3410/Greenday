@@ -16,3 +16,15 @@ Greenday 음악을 알아봅시다
 [구글 권장 아키텍처](https://developer.android.com/topic/architecture)  
 [multi-module](https://developer.android.com/topic/modularization)  
 <img width="800" src="https://github.com/jhg3410/Greenday/assets/80373033/5e9853cd-5c73-4721-b674-eb1582612547">
+
+## Libraries
+
+- coil - 이미지 로딩
+  
+- hilt - 의존성 주입
+  
+- retrofit2 - 네트워크 통신
+  
+- logging-interceptor - 네트워크 통신 로그 기록
+  
+- moshi - (역)직렬화(JSON ↔ Kotlin)
