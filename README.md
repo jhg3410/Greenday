@@ -4,7 +4,7 @@ Greenday 음악을 알아봅시다
 ## Design
 [Figma](https://www.figma.com/file/2YmPt6ZoRMIJvRwLHLRul8/Greenday?type=design&node-id=2%3A224&mode=design&t=cMRvjynp7cCUu3Ni-1)
 
-## Screenshot
+## Screenshots
 ![Screenshot](https://github.com/jhg3410/Greenday/assets/80373033/5fa73fa3-37f2-4e81-9cc0-a0f32fcf8e8d)
 
 ## Videos
