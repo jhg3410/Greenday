@@ -6,58 +6,59 @@ import retrofit2.Call
 import retrofit2.CallAdapter
 import retrofit2.Callback
 import retrofit2.Response
+import watcha.test.greenday.core.common.error.GreendayError.NetworkConnectionError
+import watcha.test.greenday.core.common.error.GreendayError.ServerError
+import watcha.test.greenday.core.common.result.GreendayResult
 import java.io.IOException
 import java.lang.reflect.Type
 
 internal class ResultCallAdapter(
     private val responseType: Type
-) : CallAdapter<Type, Call<Result<Type>>> {
+) : CallAdapter<Type, Call<GreendayResult<Type>>> {
 
     override fun responseType(): Type = responseType
 
-    override fun adapt(call: Call<Type>): Call<Result<Type>> = ResultCall(call)
+    override fun adapt(call: Call<Type>): Call<GreendayResult<Type>> = ResultCall(call)
 }
 
 
 private class ResultCall<T>(
-    private val proxy: Call<T>
-) : Call<Result<T>> {
+    private val proxy: Call<T>,
+) : Call<GreendayResult<T>> {
 
-    override fun enqueue(callback: Callback<Result<T>>) {
+    override fun enqueue(callback: Callback<GreendayResult<T>>) {
         proxy.enqueue(object : Callback<T> {
             override fun onResponse(call: Call<T>, response: Response<T>) {
-                callback.onResponse(this@ResultCall, Response.success(response.toResult()))
+                callback.onResponse(this@ResultCall, Response.success(response.toGreendayResult()))
             }
 
-            private fun Response<T>.toResult(): Result<T> {
+            private fun Response<T>.toGreendayResult(): GreendayResult<T> {
                 val body = body()
 
-                return if (isSuccessful && body != null) {
-                    Result.success(body)
-                } else if (body == null) {
-                    Result.failure(Throwable("Body is null"))
+                return if (isSuccessful) {
+                    GreendayResult.Success(body)
                 } else {
-                    Result.failure(Throwable(errorBody()?.string() ?: "Unknown error"))
+                    GreendayResult.Failure(ServerError())
                 }
             }
 
             override fun onFailure(call: Call<T>, t: Throwable) {
-                if (t is IOException) {
-                    callback.onResponse(
-                        this@ResultCall,
-                        Response.success(Result.failure(Throwable("Network error")))
-                    )
-                } else {
-                    callback.onResponse(this@ResultCall, Response.success(Result.failure(t)))
+                val failure = when (t) {
+                    is IOException -> NetworkConnectionError()
+                    else -> ServerError()
                 }
+                callback.onResponse(
+                    this@ResultCall,
+                    Response.success(GreendayResult.Failure(failure))
+                )
             }
         })
     }
 
 
-    override fun clone(): Call<Result<T>> = ResultCall(proxy.clone())
+    override fun clone(): Call<GreendayResult<T>> = ResultCall(proxy.clone())
 
-    override fun execute(): Response<Result<T>> = throw UnsupportedOperationException()
+    override fun execute(): Response<GreendayResult<T>> = throw UnsupportedOperationException()
 
     override fun isExecuted(): Boolean = proxy.isExecuted
 

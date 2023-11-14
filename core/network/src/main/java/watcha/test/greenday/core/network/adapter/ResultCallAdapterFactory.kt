@@ -3,6 +3,7 @@ package watcha.test.greenday.core.network.adapter
 import retrofit2.Call
 import retrofit2.CallAdapter
 import retrofit2.Retrofit
+import watcha.test.greenday.core.common.result.GreendayResult
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
 
@@ -23,7 +24,7 @@ class ResultCallAdapterFactory private constructor() : CallAdapter.Factory() {
         }
 
         val wrapperType = getParameterUpperBound(0, returnType as ParameterizedType)
-        if (getRawType(wrapperType) != Result::class.java) {
+        if (getRawType(wrapperType) != GreendayResult::class.java) {
             return null
         }
 
