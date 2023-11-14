@@ -19,7 +19,6 @@ import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
-import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -37,6 +36,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.launch
+import watcha.test.greenday.core.common.error.GreendayError.*
 import watcha.test.greenday.core.model.Song
 import watcha.test.greenday.core.ui.pagination.Pageable
 import watcha.test.greenday.core.ui.state.UiState
@@ -76,22 +76,29 @@ fun HomeScreen(
             .padding(horizontal = 24.dp)
     ) {
         HomeScreenTitle()
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .pullRefresh(pullRefreshState),
-            contentAlignment = Alignment.TopCenter
-        ) {
-            HomeScreenContent(
-                songs = homeViewModel.songs,
-                uiState = uiState,
-                getSongs = homeViewModel::getSongs
+        if (uiState is UiState.Error && homeViewModel.songs.isEmpty()) {
+            HomeScreenErrorWhenNoItems(
+                error = uiState as UiState.Error,
+                retry = { coroutineScope.launch { homeViewModel.getSongs() } }
             )
-            PullRefreshIndicator(
-                refreshing = isRefreshing,
-                state = pullRefreshState,
-                contentColor = MaterialTheme.colorScheme.primary
-            )
+        } else {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .pullRefresh(pullRefreshState),
+                contentAlignment = Alignment.TopCenter
+            ) {
+                HomeScreenContent(
+                    songs = homeViewModel.songs,
+                    uiState = uiState,
+                    getSongs = homeViewModel::getSongs
+                )
+                PullRefreshIndicator(
+                    refreshing = isRefreshing,
+                    state = pullRefreshState,
+                    contentColor = MaterialTheme.colorScheme.primary
+                )
+            }
         }
     }
 }
@@ -143,7 +150,13 @@ private fun HomeScreenContent(
         }
 
         when (uiState) {
-            is UiState.Success -> Unit
+            is UiState.Success -> {
+                if (songs.isEmpty()) {
+                    stateItem {
+                        HomeScreenEmpty()
+                    }
+                }
+            }
 
             is UiState.Loading -> {
                 stateItem {
@@ -153,13 +166,9 @@ private fun HomeScreenContent(
 
             is UiState.Error -> {
                 stateItem {
-                    HomeScreenError(
-                        errorMessage = uiState.throwable.message ?: "Unknown Error",
-                        retry = {
-                            coroutineScope.launch {
-                                getSongs()
-                            }
-                        }
+                    HomeScreenErrorWhenHasItems(
+                        error = uiState,
+                        retry = { coroutineScope.launch { getSongs() } }
                     )
                 }
             }
@@ -182,25 +191,17 @@ private fun HomeScreenLoading(
 }
 
 @Composable
-private fun HomeScreenError(
-    modifier: Modifier = Modifier,
-    errorMessage: String,
-    retry: () -> Unit
+private fun HomeScreenEmpty(
+    modifier: Modifier = Modifier
 ) {
-    Column(
-        modifier = modifier
-            .height(120.dp)
-            .padding(vertical = 24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+    Box(
+        modifier = modifier,
+        contentAlignment = Alignment.Center
     ) {
         Text(
-            text = errorMessage,
+            text = "No Data",
             color = MaterialTheme.colorScheme.onBackground,
             style = MaterialTheme.typography.bodyLarge
         )
-        Button(onClick = { retry() }) {
-            Text(text = "Retry", color = MaterialTheme.colorScheme.onPrimary)
-        }
     }
 }
