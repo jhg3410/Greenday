@@ -46,8 +46,8 @@ class HomeViewModel @Inject constructor(
                 is UiState.Success -> {
                     _uiState.value = UiState.Success(Unit)
                     val newSongs =
-                        uiState.data.filter { song -> _songs.none { it.trackId == song.trackId } }
-                    _songs.addAll(newSongs)
+                        uiState.data?.filter { song -> _songs.none { it.trackId == song.trackId } }
+                    _songs.addAll(newSongs ?: emptyList())
                     page++
                 }
             }
