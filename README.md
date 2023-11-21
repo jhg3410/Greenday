@@ -10,7 +10,7 @@ Greenday 음악을 알아봅시다
 ## Videos
 |Pagination|Network|
 |:----:|:----:|
-|<img width="250" src="https://github.com/jhg3410/Greenday/assets/80373033/53b7c820-837f-4199-b245-d733ea5338e5">|<img width = "250" src = "https://github.com/jhg3410/Greenday/assets/80373033/6aeab840-7b5f-41ef-a650-013ef91cca7a">|
+|<img width="250" src="https://github.com/jhg3410/Greenday/assets/80373033/53b7c820-837f-4199-b245-d733ea5338e5">|<img width = "250" src = "https://github.com/jhg3410/Movie/assets/80373033/9123f4b4-5d2f-44c5-8c0a-0e8b999ca68e">|
 
 ## Architecture
 [구글 권장 아키텍처](https://developer.android.com/topic/architecture)  
