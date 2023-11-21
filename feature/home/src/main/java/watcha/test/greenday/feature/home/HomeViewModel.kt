@@ -2,13 +2,16 @@ package watcha.test.greenday.feature.home
 
 import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import watcha.test.greenday.core.common.result.GreendayResult.Failure
+import watcha.test.greenday.core.common.result.GreendayResult.Success
 import watcha.test.greenday.core.data.repository.SongRepository
 import watcha.test.greenday.core.model.Song
 import watcha.test.greenday.core.ui.state.UiState
-import watcha.test.greenday.core.ui.state.createUiStateFlow
 import javax.inject.Inject
 
 @HiltViewModel
@@ -24,31 +27,32 @@ class HomeViewModel @Inject constructor(
 
     private var page = FIRST_PAGE
 
-    suspend fun refresh() {
+    init {
+        getSongs()
+    }
+
+    internal fun refresh() {
         _songs.clear()
         page = FIRST_PAGE
         getSongs()
     }
 
-    suspend fun getSongs() {
-        createUiStateFlow {
-            songRepository.getSongs(limit = LIMIT, offset = page * LIMIT)
-        }.collect { uiState ->
-            when (uiState) {
-                is UiState.Loading -> {
-                    _uiState.value = uiState
-                }
+    internal fun getSongs() {
+        _uiState.value = UiState.Loading
+        viewModelScope.launch {
+            val result = songRepository.getSongs(limit = LIMIT, offset = page * LIMIT)
 
-                is UiState.Error -> {
-                    _uiState.value = uiState
-                }
-
-                is UiState.Success -> {
+            when (result) {
+                is Success -> {
                     _uiState.value = UiState.Success(Unit)
                     val newSongs =
-                        uiState.data.filter { song -> _songs.none { it.trackId == song.trackId } }
-                    _songs.addAll(newSongs)
+                        result.data?.filter { song -> _songs.none { it.trackId == song.trackId } }
+                    _songs.addAll(newSongs ?: emptyList())
                     page++
+                }
+
+                is Failure -> {
+                    _uiState.value = UiState.Error(result.error)
                 }
             }
         }

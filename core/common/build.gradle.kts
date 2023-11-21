@@ -2,13 +2,11 @@
 plugins {
     alias(libs.plugins.com.android.library)
     alias(libs.plugins.org.jetbrains.kotlin.android)
-    alias(libs.plugins.org.jetbrains.kotlin.kapt)
-    alias(libs.plugins.hilt.android)
 }
 
 android {
-    namespace = "watcha.test.greenday.core.data"
-    compileSdk = 34
+    namespace = "watcha.test.greenday.core.common"
+    compileSdk = 33
 
     defaultConfig {
         minSdk = 23
@@ -27,19 +25,15 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
     }
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_17.toString()
+        jvmTarget = "1.8"
     }
 }
 
 dependencies {
-    // modules
-    implementation(project(":core:model"))
-    implementation(project(":core:common"))
-    implementation(project(":core:network"))
 
     implementation(libs.core.ktx)
     implementation(libs.appcompat)
@@ -47,8 +41,4 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.test.ext.junit)
     androidTestImplementation(libs.espresso.core)
-
-    // hilt
-    implementation(libs.hilt.android)
-    kapt(libs.hilt.compiler)
 }

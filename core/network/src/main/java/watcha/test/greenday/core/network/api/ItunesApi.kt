@@ -2,6 +2,7 @@ package watcha.test.greenday.core.network.api
 
 import retrofit2.http.GET
 import retrofit2.http.Query
+import watcha.test.greenday.core.common.result.GreendayResult
 import watcha.test.greenday.core.network.model.SongResponse
 
 internal interface ItunesApi {
@@ -11,5 +12,5 @@ internal interface ItunesApi {
         @Query("entity") entity: String = "song",
         @Query("limit") limit: Int,
         @Query("offset") offset: Int
-    ): Result<SongResponse>
+    ): GreendayResult<SongResponse>
 }

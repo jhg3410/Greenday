@@ -1,11 +1,12 @@
 package watcha.test.greenday.core.data.repository
 
+import watcha.test.greenday.core.common.result.GreendayResult
 import watcha.test.greenday.core.model.Song
 import javax.inject.Inject
 
 internal class SongRepositoryMock @Inject constructor() : SongRepository {
-    override suspend fun getSongs(limit: Int, offset: Int): Result<List<Song>> {
-        return Result.success(
+    override suspend fun getSongs(limit: Int, offset: Int): GreendayResult<List<Song>> {
+        return GreendayResult.Success(
             listOf(
                 Song(
                     trackId = 1,
