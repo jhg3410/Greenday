@@ -27,6 +27,10 @@ class HomeViewModel @Inject constructor(
 
     private var page = FIRST_PAGE
 
+    init {
+        getSongs()
+    }
+
     internal fun refresh() {
         _songs.clear()
         page = FIRST_PAGE
