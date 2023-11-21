@@ -9,7 +9,7 @@ import androidx.compose.runtime.remember
 internal object BasePageable {
 
     @Composable
-    fun Operate(calculateShouldLoadMore: () -> Boolean, onLoadMore: suspend () -> Unit) {
+    fun Operate(calculateShouldLoadMore: () -> Boolean, onLoadMore: () -> Unit) {
         val shouldLoadMore by remember {
             derivedStateOf {
                 calculateShouldLoadMore()

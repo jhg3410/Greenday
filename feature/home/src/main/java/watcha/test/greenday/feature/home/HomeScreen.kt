@@ -56,10 +56,8 @@ fun HomeScreen(
     val pullRefreshState = rememberPullRefreshState(
         refreshing = isRefreshing,
         onRefresh = {
-            coroutineScope.launch {
-                isRefreshing = true
-                homeViewModel.refresh()
-            }
+            isRefreshing = true
+            homeViewModel.refresh()
         }
     )
 
@@ -120,10 +118,9 @@ private fun HomeScreenContent(
     modifier: Modifier = Modifier,
     songs: List<Song>,
     uiState: UiState<Unit>,
-    getSongs: suspend () -> Unit
+    getSongs: () -> Unit
 ) {
 
-    val coroutineScope = rememberCoroutineScope()
     val lazyGridState = rememberLazyGridState().apply {
         Pageable(onLoadMore = getSongs, itemCountProvider = songs::size)
     }
@@ -168,7 +165,7 @@ private fun HomeScreenContent(
                 stateItem {
                     HomeScreenErrorWhenHasItems(
                         error = uiState,
-                        retry = { coroutineScope.launch { getSongs() } }
+                        retry = getSongs
                     )
                 }
             }

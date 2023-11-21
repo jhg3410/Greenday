@@ -5,7 +5,7 @@ import androidx.compose.runtime.Composable
 
 @Composable
 fun LazyGridState.Pageable(
-    onLoadMore: suspend () -> Unit,
+    onLoadMore: () -> Unit,
     itemCountProvider: () -> Int,
     threshold: Int = 4,
 ) {

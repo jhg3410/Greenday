@@ -8,17 +8,6 @@ sealed interface GreendayResult<out T> {
 }
 
 
-fun <R, T> GreendayResult<T>.fold(
-    onSuccess: (value: T?) -> R,
-    onFailure: (error: GreendayError) -> R
-): R {
-    return when (this) {
-        is GreendayResult.Success -> onSuccess(data)
-        is GreendayResult.Failure -> onFailure(error)
-    }
-}
-
-
 fun <R, T> GreendayResult<T>.map(
     transform: (value: T?) -> R
 ): GreendayResult<R> {
